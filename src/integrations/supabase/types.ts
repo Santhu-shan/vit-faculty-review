@@ -118,6 +118,7 @@ export type Database = {
           details_image_url: string | null
           faculty_id: string | null
           id: string
+          mobile_number: string | null
           name: string
           office_hours: string | null
           photo_url: string | null
@@ -133,6 +134,7 @@ export type Database = {
           details_image_url?: string | null
           faculty_id?: string | null
           id?: string
+          mobile_number?: string | null
           name: string
           office_hours?: string | null
           photo_url?: string | null
@@ -148,6 +150,7 @@ export type Database = {
           details_image_url?: string | null
           faculty_id?: string | null
           id?: string
+          mobile_number?: string | null
           name?: string
           office_hours?: string | null
           photo_url?: string | null

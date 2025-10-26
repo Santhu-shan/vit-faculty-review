@@ -143,7 +143,7 @@ const Index = () => {
             Discover faculty reviews and share your experiences
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Button onClick={() => navigate("/add-faculty")} className="gradient-primary text-white bg-neutral-950 rounded-sm text-base font-semibold">
+            <Button onClick={() => navigate("/add-faculty")} className="gradient-primary text-white bg-neutral-950 font-extralight rounded-full text-justify text-base">
               <Plus className="h-4 w-4 mr-2" />
               Add Faculty
             </Button>

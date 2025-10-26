@@ -26,7 +26,7 @@ const Navbar = ({
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 rounded-none bg-slate-400">
         <div className="flex h-16 items-center justify-between bg-slate-400 rounded-sm">
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="gradient-primary p-2 transition-transform group-hover:scale-105 bg-slate-950 rounded-sm">
+            <div className="gradient-primary p-2 transition-transform group-hover:scale-105 bg-neutral-950 rounded-full">
               <Star className="h-6 w-6 text-white" fill="white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-slate-950">

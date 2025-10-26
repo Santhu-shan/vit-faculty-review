@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import Browse from "./pages/Browse";
 import Admin from "./pages/Admin";
 import SearchFaculty from "./pages/SearchFaculty";
+import EditFaculty from "./pages/EditFaculty";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
@@ -22,6 +23,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/faculty/:id" element={<FacultyProfile />} />
+          <Route path="/edit-faculty/:id" element={<EditFaculty />} />
           <Route path="/add-faculty" element={<AddFaculty />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/browse" element={<Browse />} />

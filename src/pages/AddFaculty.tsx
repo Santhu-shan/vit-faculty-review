@@ -22,6 +22,7 @@ const AddFaculty = () => {
     photoUrl: "",
     officeHours: "",
     contactEmail: "",
+    mobileNumber: "",
     coursesTaught: ""
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -113,6 +114,7 @@ const AddFaculty = () => {
         details_image_url: detailsUrl,
         office_hours: formData.officeHours || null,
         contact_email: formData.contactEmail || null,
+        mobile_number: formData.mobileNumber || null,
         courses_taught: courses.length > 0 ? courses : null,
         created_by: user.id,
         approved: true
@@ -210,6 +212,11 @@ const AddFaculty = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="mobileNumber">Mobile Number (optional)</Label>
+                <Input id="mobileNumber" name="mobileNumber" placeholder="+1234567890" value={formData.mobileNumber} onChange={handleChange} />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="coursesTaught">Courses Taught (optional, comma-separated)</Label>
                 <Textarea id="coursesTaught" name="coursesTaught" placeholder="Data Structures, Algorithms, Web Development" value={formData.coursesTaught} onChange={handleChange} rows={2} />
               </div>
@@ -237,7 +244,7 @@ const AddFaculty = () => {
 
               <Button 
                 type="submit" 
-                className="w-full gradient-primary text-white hover:bg-blue-200 hover:shadow-md hover:scale-105 transition-all duration-200" 
+                className="w-full gradient-primary text-white" 
                 disabled={loading || uploading}
               >
                 {loading || uploading ? "Submitting..." : "Submit Faculty"}

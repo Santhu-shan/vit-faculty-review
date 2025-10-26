@@ -98,13 +98,6 @@ export type Database = {
             referencedRelation: "reviews"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "comments_review_id_fkey"
-            columns: ["review_id"]
-            isOneToOne: false
-            referencedRelation: "reviews_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       faculty: {
@@ -258,62 +251,7 @@ export type Database = {
       }
     }
     Views: {
-      reviews_public: {
-        Row: {
-          approachability: number | null
-          availability: number | null
-          clarity: number | null
-          content: string | null
-          created_at: string | null
-          faculty_id: string | null
-          fairness: number | null
-          id: string | null
-          is_anonymous: boolean | null
-          status: string | null
-          teaching_quality: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          approachability?: number | null
-          availability?: number | null
-          clarity?: number | null
-          content?: string | null
-          created_at?: string | null
-          faculty_id?: string | null
-          fairness?: number | null
-          id?: string | null
-          is_anonymous?: boolean | null
-          status?: string | null
-          teaching_quality?: number | null
-          updated_at?: string | null
-          user_id?: never
-        }
-        Update: {
-          approachability?: number | null
-          availability?: number | null
-          clarity?: number | null
-          content?: string | null
-          created_at?: string | null
-          faculty_id?: string | null
-          fairness?: number | null
-          id?: string | null
-          is_anonymous?: boolean | null
-          status?: string | null
-          teaching_quality?: number | null
-          updated_at?: string | null
-          user_id?: never
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reviews_faculty_id_fkey"
-            columns: ["faculty_id"]
-            isOneToOne: false
-            referencedRelation: "faculty"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never

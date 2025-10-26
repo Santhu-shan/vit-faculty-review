@@ -94,7 +94,10 @@ const FacultyProfile = () => {
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching reviews:", error);
+        return;
+      }
       
       // Mask user_id for anonymous reviews on the client side
       const sanitizedReviews = (data || []).map(review => ({
@@ -104,7 +107,7 @@ const FacultyProfile = () => {
       
       setReviews(sanitizedReviews);
     } catch (error: any) {
-      console.error(error);
+      console.error("Unexpected error:", error);
     }
   };
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -139,8 +142,8 @@ const FacultyProfile = () => {
         fairness: 0
       });
       
-      // Refresh reviews to show the new one
-      fetchReviews();
+      // Refresh reviews immediately to show the new one
+      await fetchReviews();
     } catch (error: any) {
       toast.error(error.message || "Failed to submit review");
       console.error(error);
@@ -212,6 +215,37 @@ const FacultyProfile = () => {
                 <h3 className="font-semibold mb-2">Office Hours</h3>
                 <p className="text-sm text-muted-foreground">{faculty.office_hours}</p>
               </div>}
+
+            {faculty.mobile_number && <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+                <h3 className="font-semibold mb-2">Mobile Number</h3>
+                <p className="text-sm text-muted-foreground">{faculty.mobile_number}</p>
+              </div>}
+
+            {faculty.details_image_url && <div className="mt-4">
+                <h3 className="font-semibold mb-2">VTOP Details</h3>
+                <img 
+                  src={faculty.details_image_url} 
+                  alt="VTOP Details" 
+                  className="w-full max-w-2xl rounded-lg border shadow-sm"
+                />
+              </div>}
+
+            <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <div>
+                <span className="font-semibold">Created:</span> {new Date(faculty.created_at).toLocaleDateString()}
+              </div>
+              <div>
+                <span className="font-semibold">Last Modified:</span> {new Date(faculty.updated_at).toLocaleDateString()}
+              </div>
+            </div>
+
+            {(user?.id === faculty.created_by) && (
+              <div className="mt-4">
+                <Button onClick={() => navigate(`/edit-faculty/${id}`)} variant="outline">
+                  Edit Faculty
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -274,7 +308,10 @@ const FacultyProfile = () => {
                 <CardContent className="p-12 text-center">
                   <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-muted-foreground mb-4">No reviews yet</p>
-                  <Button onClick={() => navigate("#write")}>Write the first review</Button>
+                  <Button onClick={() => {
+                    const writeTab = document.querySelector('[value="write"]') as HTMLElement;
+                    writeTab?.click();
+                  }}>Write the first review</Button>
                 </CardContent>
               </Card>}
           </TabsContent>
@@ -332,7 +369,7 @@ const FacultyProfile = () => {
                   <Button 
                     type="submit" 
                     disabled={submitting} 
-                    className="w-full gradient-primary text-white bg-zinc-900 hover:bg-blue-200 hover:shadow-md hover:scale-105 transition-all duration-200"
+                    className="w-full gradient-primary text-white bg-zinc-900"
                   >
                     {submitting ? "Submitting..." : "Submit Review"}
                   </Button>

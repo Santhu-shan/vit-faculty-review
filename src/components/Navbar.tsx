@@ -54,7 +54,7 @@ const Navbar = ({
                   Logout
                 </Button>
               </> : <Link to="/auth">
-                <Button className="gradient-primary text-white hover:bg-blue-200 hover:shadow-md hover:scale-105 transition-all duration-200">Sign In</Button>
+                <Button className="gradient-primary text-white">Sign In</Button>
               </Link>}
           </div>
         </div>

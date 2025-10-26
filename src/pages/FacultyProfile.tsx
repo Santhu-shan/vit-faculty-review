@@ -84,17 +84,25 @@ const FacultyProfile = () => {
   };
   const fetchReviews = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from("reviews").select(`
+      const { data, error } = await supabase
+        .from("reviews")
+        .select(`
           *,
           profiles!reviews_user_id_fkey(display_name, avatar_url)
-        `).eq("faculty_id", id).eq("status", "approved").order("created_at", {
-        ascending: false
-      });
+        `)
+        .eq("faculty_id", id)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+      
       if (error) throw error;
-      setReviews(data || []);
+      
+      // Mask user_id for anonymous reviews on the client side
+      const sanitizedReviews = (data || []).map(review => ({
+        ...review,
+        user_id: review.is_anonymous ? null : review.user_id
+      }));
+      
+      setReviews(sanitizedReviews);
     } catch (error: any) {
       console.error(error);
     }
@@ -109,17 +117,18 @@ const FacultyProfile = () => {
     }
     setSubmitting(true);
     try {
-      const {
-        error
-      } = await supabase.from("reviews").insert({
+      const { error } = await supabase.from("reviews").insert({
         user_id: user.id,
         faculty_id: id,
         content: reviewContent,
         is_anonymous: isAnonymous,
+        status: 'approved',
         ...ratings
       });
+      
       if (error) throw error;
-      toast.success("Review submitted! Pending admin approval.");
+      
+      toast.success("Review submitted successfully!");
       setReviewContent("");
       setIsAnonymous(false);
       setRatings({
@@ -129,6 +138,9 @@ const FacultyProfile = () => {
         availability: 0,
         fairness: 0
       });
+      
+      // Refresh reviews to show the new one
+      fetchReviews();
     } catch (error: any) {
       toast.error(error.message || "Failed to submit review");
       console.error(error);
@@ -317,7 +329,11 @@ const FacultyProfile = () => {
                     </Label>
                   </div>
 
-                  <Button type="submit" disabled={submitting} className="w-full gradient-primary text-white bg-zinc-900 hover:bg-zinc-800">
+                  <Button 
+                    type="submit" 
+                    disabled={submitting} 
+                    className="w-full gradient-primary text-white bg-zinc-900 hover:bg-blue-200 hover:shadow-md hover:scale-105 transition-all duration-200"
+                  >
                     {submitting ? "Submitting..." : "Submit Review"}
                   </Button>
                 </form>

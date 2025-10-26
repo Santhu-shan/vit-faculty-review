@@ -14,10 +14,303 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_votes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          dislikes: number | null
+          faculty_id: string | null
+          id: string
+          likes: number | null
+          review_id: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          dislikes?: number | null
+          faculty_id?: string | null
+          id?: string
+          likes?: number | null
+          review_id?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          dislikes?: number | null
+          faculty_id?: string | null
+          id?: string
+          likes?: number | null
+          review_id?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculty"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faculty: {
+        Row: {
+          approved: boolean | null
+          contact_email: string | null
+          courses_taught: string[] | null
+          created_at: string
+          created_by: string
+          department: string
+          details_image_url: string | null
+          faculty_id: string | null
+          id: string
+          name: string
+          office_hours: string | null
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean | null
+          contact_email?: string | null
+          courses_taught?: string[] | null
+          created_at?: string
+          created_by: string
+          department: string
+          details_image_url?: string | null
+          faculty_id?: string | null
+          id?: string
+          name: string
+          office_hours?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean | null
+          contact_email?: string | null
+          courses_taught?: string[] | null
+          created_at?: string
+          created_by?: string
+          department?: string
+          details_image_url?: string | null
+          faculty_id?: string | null
+          id?: string
+          name?: string
+          office_hours?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          badges: Json | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          points: number | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          badges?: Json | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          points?: number | null
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          badges?: Json | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          points?: number | null
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          approachability: number | null
+          availability: number | null
+          clarity: number | null
+          content: string
+          created_at: string
+          faculty_id: string
+          fairness: number | null
+          id: string
+          is_anonymous: boolean | null
+          rejection_reason: string | null
+          status: string | null
+          teaching_quality: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approachability?: number | null
+          availability?: number | null
+          clarity?: number | null
+          content: string
+          created_at?: string
+          faculty_id: string
+          fairness?: number | null
+          id?: string
+          is_anonymous?: boolean | null
+          rejection_reason?: string | null
+          status?: string | null
+          teaching_quality?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approachability?: number | null
+          availability?: number | null
+          clarity?: number | null
+          content?: string
+          created_at?: string
+          faculty_id?: string
+          fairness?: number | null
+          id?: string
+          is_anonymous?: boolean | null
+          rejection_reason?: string | null
+          status?: string | null
+          teaching_quality?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculty"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      reviews_public: {
+        Row: {
+          approachability: number | null
+          availability: number | null
+          clarity: number | null
+          content: string | null
+          created_at: string | null
+          faculty_id: string | null
+          fairness: number | null
+          id: string | null
+          is_anonymous: boolean | null
+          status: string | null
+          teaching_quality: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          approachability?: number | null
+          availability?: number | null
+          clarity?: number | null
+          content?: string | null
+          created_at?: string | null
+          faculty_id?: string | null
+          fairness?: number | null
+          id?: string | null
+          is_anonymous?: boolean | null
+          status?: string | null
+          teaching_quality?: number | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Update: {
+          approachability?: number | null
+          availability?: number | null
+          clarity?: number | null
+          content?: string | null
+          created_at?: string | null
+          faculty_id?: string | null
+          fairness?: number | null
+          id?: string | null
+          is_anonymous?: boolean | null
+          status?: string | null
+          teaching_quality?: number | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculty"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

@@ -24,6 +24,9 @@ const AddFaculty = () => {
     contactEmail: "",
     coursesTaught: ""
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [detailsFile, setDetailsFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   useEffect(() => {
     const {
       data: {
@@ -57,29 +60,73 @@ const AddFaculty = () => {
     e.preventDefault();
     if (!user) return;
     setLoading(true);
+    setUploading(true);
+    
     try {
+      let photoUrl = formData.photoUrl;
+      let detailsUrl = null;
+
+      // Upload faculty photo if provided
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const uploadResult = await supabase.storage
+          .from('faculty_photos')
+          .upload(filePath, photoFile);
+
+        if (uploadResult.error) throw uploadResult.error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('faculty_photos')
+          .getPublicUrl(filePath);
+
+        photoUrl = publicUrl;
+      }
+
+      // Upload faculty details image if provided
+      if (detailsFile) {
+        const fileExt = detailsFile.name.split('.').pop();
+        const fileName = `details_${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const uploadResult = await supabase.storage
+          .from('faculty_details')
+          .upload(filePath, detailsFile);
+
+        if (uploadResult.error) throw uploadResult.error;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('faculty_details')
+          .getPublicUrl(filePath);
+
+        detailsUrl = publicUrl;
+      }
+
       const courses = formData.coursesTaught.split(",").map(c => c.trim()).filter(c => c);
-      const {
-        data,
-        error
-      } = await supabase.from("faculty").insert({
-        faculty_id: formData.facultyId,
+      const { error } = await supabase.from("faculty").insert({
+        faculty_id: formData.facultyId || null,
         name: formData.name,
         department: formData.department,
-        photo_url: formData.photoUrl || null,
+        photo_url: photoUrl || null,
+        details_image_url: detailsUrl,
         office_hours: formData.officeHours || null,
         contact_email: formData.contactEmail || null,
         courses_taught: courses.length > 0 ? courses : null,
-        created_by: user.id
+        created_by: user.id,
+        approved: true
       }).select();
+      
       if (error) throw error;
-      toast.success("Faculty added successfully! Pending admin approval.");
+      toast.success("Faculty added successfully!");
       navigate("/");
     } catch (error: any) {
       toast.error(error.message || "Failed to add faculty");
       console.error(error);
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -104,7 +151,7 @@ const AddFaculty = () => {
           <CardHeader>
             <CardTitle className="text-2xl">Add New Faculty</CardTitle>
             <CardDescription>
-              Submit a faculty member for review. All submissions require admin approval.
+              Submit a faculty member. Your submission will be visible immediately.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -116,8 +163,8 @@ const AddFaculty = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="facultyId">Faculty ID *</Label>
-                  <Input id="facultyId" name="facultyId" placeholder="FAC001" value={formData.facultyId} onChange={handleChange} required />
+                  <Label htmlFor="facultyId">Faculty ID (optional)</Label>
+                  <Input id="facultyId" name="facultyId" placeholder="FAC001" value={formData.facultyId} onChange={handleChange} />
                 </div>
               </div>
 
@@ -127,7 +174,28 @@ const AddFaculty = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="photoUrl">Photo URL (optional)</Label>
+                <Label htmlFor="photoFile">Faculty Profile Photo (optional)</Label>
+                <Input 
+                  id="photoFile" 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/jpg"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("File size must be less than 5MB");
+                        e.target.value = '';
+                        return;
+                      }
+                      setPhotoFile(file);
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">Upload JPG or PNG, max 5MB</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="photoUrl">Or enter Photo URL (optional)</Label>
                 <Input id="photoUrl" name="photoUrl" type="url" placeholder="https://example.com/photo.jpg" value={formData.photoUrl} onChange={handleChange} />
               </div>
 
@@ -146,8 +214,33 @@ const AddFaculty = () => {
                 <Textarea id="coursesTaught" name="coursesTaught" placeholder="Data Structures, Algorithms, Web Development" value={formData.coursesTaught} onChange={handleChange} rows={2} />
               </div>
 
-              <Button type="submit" className="w-full gradient-primary text-white" disabled={loading}>
-                {loading ? "Submitting..." : "Submit Faculty"}
+              <div className="space-y-2">
+                <Label htmlFor="detailsFile">Faculty Details from VTOP (optional)</Label>
+                <Input 
+                  id="detailsFile" 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/jpg"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("File size must be less than 5MB");
+                        e.target.value = '';
+                        return;
+                      }
+                      setDetailsFile(file);
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">Upload faculty details screenshot (JPG/PNG, max 5MB)</p>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full gradient-primary text-white hover:bg-blue-200 hover:shadow-md hover:scale-105 transition-all duration-200" 
+                disabled={loading || uploading}
+              >
+                {loading || uploading ? "Submitting..." : "Submit Faculty"}
               </Button>
             </form>
           </CardContent>

@@ -16,6 +16,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -83,6 +84,46 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      const uploadResult = await supabase.storage
+        .from('user_avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadResult.error) throw uploadResult.error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('user_avatars')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Profile picture updated!");
+      fetchProfile();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
@@ -107,12 +148,28 @@ const Profile = () => {
         <Card className="mb-8 shadow-medium">
           <CardContent className="p-8">
             <div className="flex items-center gap-6">
-              <Avatar className="h-24 w-24 ring-4 ring-primary/10">
-                <AvatarImage src={profile?.avatar_url} />
-                <AvatarFallback className="bg-gradient-primary text-white text-2xl font-bold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group">
+                <Avatar className="h-24 w-24 ring-4 ring-primary/10">
+                  <AvatarImage src={profile?.avatar_url} />
+                  <AvatarFallback className="bg-gradient-primary text-white text-2xl font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <label 
+                  htmlFor="avatar-upload" 
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+                >
+                  <span className="text-white text-xs">Upload</span>
+                </label>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/jpeg,image/png,image/jpg"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
+              </div>
               
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-2">

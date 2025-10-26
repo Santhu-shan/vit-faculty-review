@@ -143,12 +143,15 @@ const Index = () => {
             Discover faculty reviews and share your experiences
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Button onClick={() => navigate("/add-faculty")} className="gradient-primary text-white bg-neutral-950 hover:bg-neutral-800 rounded-sm text-base font-semibold">
+            <Button onClick={() => navigate("/add-faculty")} className="gradient-primary text-white bg-neutral-950 hover:bg-blue-200 hover:shadow-md hover:scale-105 transition-all duration-200 rounded-sm text-base font-semibold">
               <Plus className="h-4 w-4 mr-2" />
               Add Faculty
             </Button>
             <Button variant="outline" onClick={() => navigate("/browse")}>
               Browse All Faculty
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/search")}>
+              Search Faculty
             </Button>
           </div>
         </div>

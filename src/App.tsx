@@ -10,6 +10,7 @@ import AddFaculty from "./pages/AddFaculty";
 import Profile from "./pages/Profile";
 import Browse from "./pages/Browse";
 import Admin from "./pages/Admin";
+import SearchFaculty from "./pages/SearchFaculty";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
@@ -18,13 +19,14 @@ const App = () => <QueryClientProvider client={queryClient}>
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} className="bg-neutral-50" />
+          <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/faculty/:id" element={<FacultyProfile />} />
           <Route path="/add-faculty" element={<AddFaculty />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/browse" element={<Browse />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/search" element={<SearchFaculty />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

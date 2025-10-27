@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Users, BookOpen, MessageSquare } from "lucide-react";
+import { CheckCircle, XCircle, Users, BookOpen, MessageSquare, Trash2 } from "lucide-react";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -19,6 +19,10 @@ const Admin = () => {
   const [pendingFaculty, setPendingFaculty] = useState<any[]>([]);
   const [pendingReviews, setPendingReviews] = useState<any[]>([]);
   const [pendingComments, setPendingComments] = useState<any[]>([]);
+  const [allFaculty, setAllFaculty] = useState<any[]>([]);
+  const [allReviews, setAllReviews] = useState<any[]>([]);
+  const [allComments, setAllComments] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -46,6 +50,12 @@ const Admin = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (isAdmin) {
+      fetchAllItems();
+    }
+  }, [isAdmin]);
+
   const checkAdminStatus = async () => {
     if (!user) return;
 
@@ -62,6 +72,7 @@ const Admin = () => {
       if (data?.role === "admin") {
         setIsAdmin(true);
         fetchPendingItems();
+        fetchAllItems();
       } else {
         toast.error("Access denied: Admin only");
         navigate("/");
@@ -90,6 +101,24 @@ const Admin = () => {
     }
   };
 
+  const fetchAllItems = async () => {
+    try {
+      const [facultyRes, reviewsRes, commentsRes, usersRes] = await Promise.all([
+        supabase.from("faculty").select("*"),
+        supabase.from("reviews").select(`*, faculty(name), profiles!reviews_user_id_fkey(display_name)`),
+        supabase.from("comments").select(`*, profiles!comments_user_id_fkey(display_name)`),
+        supabase.from("profiles").select("*"),
+      ]);
+
+      setAllFaculty(facultyRes.data || []);
+      setAllReviews(reviewsRes.data || []);
+      setAllComments(commentsRes.data || []);
+      setAllUsers(usersRes.data || []);
+    } catch (error: any) {
+      console.error(error);
+    }
+  };
+
   const approveFaculty = async (id: string) => {
     try {
       const { error } = await supabase
@@ -100,6 +129,7 @@ const Admin = () => {
       if (error) throw error;
       toast.success("Faculty approved");
       fetchPendingItems();
+      fetchAllItems();
     } catch (error: any) {
       toast.error("Failed to approve faculty");
     }
@@ -115,6 +145,7 @@ const Admin = () => {
       if (error) throw error;
       toast.success("Faculty rejected and removed");
       fetchPendingItems();
+      fetchAllItems();
     } catch (error: any) {
       toast.error("Failed to reject faculty");
     }
@@ -130,6 +161,7 @@ const Admin = () => {
       if (error) throw error;
       toast.success("Review approved");
       fetchPendingItems();
+      fetchAllItems();
     } catch (error: any) {
       toast.error("Failed to approve review");
     }
@@ -145,6 +177,7 @@ const Admin = () => {
       if (error) throw error;
       toast.success("Review rejected");
       fetchPendingItems();
+      fetchAllItems();
     } catch (error: any) {
       toast.error("Failed to reject review");
     }
@@ -160,6 +193,7 @@ const Admin = () => {
       if (error) throw error;
       toast.success("Comment approved");
       fetchPendingItems();
+      fetchAllItems();
     } catch (error: any) {
       toast.error("Failed to approve comment");
     }
@@ -175,8 +209,63 @@ const Admin = () => {
       if (error) throw error;
       toast.success("Comment rejected");
       fetchPendingItems();
+      fetchAllItems();
     } catch (error: any) {
       toast.error("Failed to reject comment");
+    }
+  };
+
+  const deleteFaculty = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this faculty? This will also delete all associated reviews and comments.")) return;
+    
+    try {
+      const { error } = await supabase.from("faculty").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Faculty deleted");
+      fetchAllItems();
+    } catch (error: any) {
+      toast.error("Failed to delete faculty");
+    }
+  };
+
+  const deleteReview = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this review? This will also delete all associated comments.")) return;
+    
+    try {
+      const { error } = await supabase.from("reviews").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Review deleted");
+      fetchPendingItems();
+      fetchAllItems();
+    } catch (error: any) {
+      toast.error("Failed to delete review");
+    }
+  };
+
+  const deleteComment = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    
+    try {
+      const { error } = await supabase.from("comments").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Comment deleted");
+      fetchPendingItems();
+      fetchAllItems();
+    } catch (error: any) {
+      toast.error("Failed to delete comment");
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user? This will delete their profile, all reviews, and comments.")) return;
+    
+    try {
+      const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
+      if (error) throw error;
+      toast.success("User deleted");
+      fetchAllItems();
+    } catch (error: any) {
+      toast.error("Failed to delete user");
     }
   };
 
@@ -223,10 +312,12 @@ const Admin = () => {
 
         {/* Moderation Tabs */}
         <Tabs defaultValue="faculty">
-          <TabsList>
-            <TabsTrigger value="faculty">Faculty ({pendingFaculty.length})</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews ({pendingReviews.length})</TabsTrigger>
-            <TabsTrigger value="comments">Comments ({pendingComments.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="faculty">Pending Faculty ({pendingFaculty.length})</TabsTrigger>
+            <TabsTrigger value="reviews">Pending Reviews ({pendingReviews.length})</TabsTrigger>
+            <TabsTrigger value="comments">Pending Comments ({pendingComments.length})</TabsTrigger>
+            <TabsTrigger value="manage">Manage All</TabsTrigger>
+            <TabsTrigger value="users">Users ({allUsers.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="faculty" className="mt-6">
@@ -371,6 +462,106 @@ const Admin = () => {
                     No pending comments
                   </p>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Manage All Tab */}
+          <TabsContent value="manage" className="mt-6">
+            <div className="space-y-6">
+              {/* All Faculty */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Faculty ({allFaculty.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {allFaculty.map((faculty) => (
+                      <div key={faculty.id} className="p-3 border rounded flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold">{faculty.name}</p>
+                          <p className="text-sm text-muted-foreground">{faculty.department}</p>
+                        </div>
+                        <Button onClick={() => deleteFaculty(faculty.id)} size="sm" variant="destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* All Reviews */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Reviews ({allReviews.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {allReviews.map((review) => (
+                      <div key={review.id} className="p-3 border rounded flex justify-between items-center">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{review.faculty?.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{review.content}</p>
+                        </div>
+                        <Button onClick={() => deleteReview(review.id)} size="sm" variant="destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* All Comments */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>All Comments ({allComments.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {allComments.map((comment) => (
+                      <div key={comment.id} className="p-3 border rounded flex justify-between items-center">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{comment.profiles?.display_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{comment.content}</p>
+                        </div>
+                        <Button onClick={() => deleteComment(comment.id)} size="sm" variant="destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Users ({allUsers.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                  {allUsers.map((user) => (
+                    <div key={user.id} className="p-3 border rounded flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold">{user.display_name || "No name"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {user.bio || "No bio"} • {user.points || 0} points
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Joined: {new Date(user.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button onClick={() => deleteUser(user.user_id)} size="sm" variant="destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

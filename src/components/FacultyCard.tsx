@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import StarRating from "./StarRating";
-import { Users, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
 interface FacultyCardProps {
   faculty: {
     id: string;
@@ -12,14 +15,37 @@ interface FacultyCardProps {
     photo_url?: string | null;
     faculty_id: string;
   };
-  averageRating?: number;
-  reviewCount?: number;
 }
-const FacultyCard = ({
-  faculty,
-  averageRating = 0,
-  reviewCount = 0
-}: FacultyCardProps) => {
+
+const FacultyCard = ({ faculty }: FacultyCardProps) => {
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+
+  useEffect(() => {
+    fetchReviewStats();
+  }, [faculty.id]);
+
+  const fetchReviewStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("teaching_quality, approachability, clarity, availability, fairness")
+        .eq("faculty_id", faculty.id)
+        .eq("status", "approved");
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const sum = data.reduce((acc, review) => {
+          return acc + (review.teaching_quality + review.approachability + review.clarity + review.availability + review.fairness) / 5;
+        }, 0);
+        setAverageRating(sum / data.length);
+        setReviewCount(data.length);
+      }
+    } catch (error) {
+      console.error("Error fetching review stats:", error);
+    }
+  };
   const initials = faculty.name.split(" ").map(n => n[0]).join("").toUpperCase();
   return <Link to={`/faculty/${faculty.id}`}>
       <Card className="group hover:shadow-medium transition-all duration-300 hover:-translate-y-1 cursor-pointer animate-fade-in">

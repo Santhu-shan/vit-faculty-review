@@ -109,6 +109,16 @@ const Browse = () => {
       <Navbar user={user} onLogout={handleLogout} />
       
       <main className="container mx-auto px-4 py-8">
+        {/* Important Notice */}
+        <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+          <p className="text-sm text-foreground">
+            ⚠️ <strong>Important:</strong> This site is designed to help students make informed decisions. 
+            Please refrain from posting false reviews or engaging in any inappropriate activities. 
+            We appreciate all contributors who help by adding faculty information and providing honest reviews. 
+            Thank you for building a trustworthy community! 🙏
+          </p>
+        </div>
+
         <h1 className="text-4xl font-bold mb-8">Browse Faculty</h1>
 
         {/* Filters */}

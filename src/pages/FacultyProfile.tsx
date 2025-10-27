@@ -12,8 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ThumbsUp, ThumbsDown, MessageSquare, ArrowLeft } from "lucide-react";
+import { MessageSquare, ArrowLeft, Send } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 const FacultyProfile = () => {
   const {
     id
@@ -23,8 +24,11 @@ const FacultyProfile = () => {
   const [user, setUser] = useState<User | null>(null);
   const [faculty, setFaculty] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [comments, setComments] = useState<{ [key: string]: any[] }>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [commentTexts, setCommentTexts] = useState<{ [key: string]: string }>({});
+  const [submittingComment, setSubmittingComment] = useState<{ [key: string]: boolean }>({});
 
   // Review form state
   const [reviewContent, setReviewContent] = useState("");
@@ -67,6 +71,26 @@ const FacultyProfile = () => {
       fetchReviews();
     }
   }, [user, id]);
+
+  const fetchComments = async (reviewId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("comments")
+        .select(`
+          *,
+          profiles!comments_user_id_fkey(display_name, avatar_url)
+        `)
+        .eq("review_id", reviewId)
+        .eq("status", "approved")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      setComments((prev) => ({ ...prev, [reviewId]: data || [] }));
+    } catch (error: any) {
+      console.error("Error fetching comments:", error);
+    }
+  };
   const fetchFaculty = async () => {
     try {
       const {
@@ -106,6 +130,11 @@ const FacultyProfile = () => {
       }));
       
       setReviews(sanitizedReviews);
+
+      // Fetch comments for each review
+      sanitizedReviews.forEach(review => {
+        fetchComments(review.id);
+      });
     } catch (error: any) {
       console.error("Unexpected error:", error);
     }
@@ -149,6 +178,32 @@ const FacultyProfile = () => {
       console.error(error);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSubmitComment = async (reviewId: string) => {
+    if (!user || !commentTexts[reviewId]?.trim()) return;
+
+    setSubmittingComment({ ...submittingComment, [reviewId]: true });
+
+    try {
+      const { error } = await supabase.from("comments").insert({
+        user_id: user.id,
+        review_id: reviewId,
+        content: commentTexts[reviewId],
+        status: "approved",
+      });
+
+      if (error) throw error;
+
+      toast.success("Comment posted successfully!");
+      setCommentTexts({ ...commentTexts, [reviewId]: "" });
+      await fetchComments(reviewId);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to post comment");
+      console.error(error);
+    } finally {
+      setSubmittingComment({ ...submittingComment, [reviewId]: false });
     }
   };
   const handleLogout = async () => {
@@ -259,6 +314,35 @@ const FacultyProfile = () => {
           <TabsContent value="reviews" className="space-y-4">
             {reviews.length > 0 ? reviews.map(review => <Card key={review.id} className="shadow-soft">
                   <CardContent className="p-6">
+                    {/* Comments Section - Displayed Above Review */}
+                    {comments[review.id] && comments[review.id].length > 0 && (
+                      <div className="mb-6 p-4 bg-muted/30 rounded-lg space-y-3">
+                        <h4 className="text-sm font-semibold mb-3">Comments ({comments[review.id].length})</h4>
+                        {comments[review.id].map(comment => (
+                          <div key={comment.id} className="flex gap-3 p-3 bg-background rounded">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={comment.profiles?.avatar_url} />
+                              <AvatarFallback className="bg-primary/10 text-xs">
+                                {comment.profiles?.display_name?.[0] || "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-sm font-medium">{comment.profiles?.display_name || "Anonymous"}</p>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(comment.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-foreground">{comment.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <Separator className="mb-4" />
+
+                    {/* Review Content */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
@@ -281,7 +365,7 @@ const FacultyProfile = () => {
 
                     <p className="text-foreground mb-4">{review.content}</p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-4">
                       <div>
                         <p className="text-muted-foreground text-xs">Teaching</p>
                         <StarRating rating={review.teaching_quality} size="sm" readonly />
@@ -301,6 +385,28 @@ const FacultyProfile = () => {
                       <div>
                         <p className="text-muted-foreground text-xs">Fair</p>
                         <StarRating rating={review.fairness} size="sm" readonly />
+                      </div>
+                    </div>
+
+                    {/* Comment Input Box */}
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="flex gap-2">
+                        <Textarea
+                          placeholder="Add a comment..."
+                          value={commentTexts[review.id] || ""}
+                          onChange={(e) => setCommentTexts({ ...commentTexts, [review.id]: e.target.value })}
+                          rows={2}
+                          maxLength={1000}
+                          className="flex-1"
+                        />
+                        <Button
+                          onClick={() => handleSubmitComment(review.id)}
+                          disabled={!commentTexts[review.id]?.trim() || submittingComment[review.id]}
+                          size="icon"
+                          className="self-end"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>

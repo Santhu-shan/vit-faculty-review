@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Session, User } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import FacultyCard from "@/components/FacultyCard";
-import { Plus, TrendingUp, Users, Award } from "lucide-react";
+import TopUsers from "@/components/TopUsers";
+import WelcomeDialog from "@/components/WelcomeDialog";
+import { Plus, TrendingUp, Users, Award, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-bg.jpg";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const Index = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [faculty, setFaculty] = useState<any[]>([]);
+  const [blacklistedFaculty, setBlacklistedFaculty] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   useEffect(() => {
     const {
       data: {
@@ -36,18 +41,27 @@ const Index = () => {
   useEffect(() => {
     if (user) {
       fetchFaculty();
+      fetchBlacklistedFaculty();
+      
+      // Show welcome dialog on first visit
+      const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+      if (!hasSeenWelcome) {
+        setShowWelcomeDialog(true);
+        localStorage.setItem('hasSeenWelcome', 'true');
+      }
     } else {
       setLoading(false);
     }
   }, [user]);
   const fetchFaculty = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from("faculty").select("*").eq("approved", true).order("created_at", {
-        ascending: false
-      }).limit(6);
+      const { data, error } = await supabase
+        .from("faculty")
+        .select("*")
+        .eq("approved", true)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      
       if (error) throw error;
       setFaculty(data || []);
     } catch (error: any) {
@@ -55,6 +69,49 @@ const Index = () => {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBlacklistedFaculty = async () => {
+    try {
+      const { data: facultyData, error: facultyError } = await supabase
+        .from("faculty")
+        .select("*")
+        .eq("approved", true);
+
+      if (facultyError) throw facultyError;
+
+      const facultyWithStats = await Promise.all(
+        (facultyData || []).map(async (f) => {
+          const { data: reviews } = await supabase
+            .from("reviews")
+            .select("teaching_quality, approachability, clarity, availability, fairness")
+            .eq("faculty_id", f.id)
+            .eq("status", "approved");
+
+          let averageRating = 0;
+          if (reviews && reviews.length > 0) {
+            const sum = reviews.reduce((acc, review) => {
+              return acc + (review.teaching_quality + review.approachability + review.clarity + review.availability + review.fairness) / 5;
+            }, 0);
+            averageRating = sum / reviews.length;
+          }
+
+          return {
+            ...f,
+            averageRating,
+            reviewCount: reviews?.length || 0,
+          };
+        })
+      );
+
+      const blacklisted = facultyWithStats
+        .filter((f) => f.averageRating < 2 && f.reviewCount > 0)
+        .slice(0, 3);
+
+      setBlacklistedFaculty(blacklisted);
+    } catch (error) {
+      console.error("Error fetching blacklisted faculty:", error);
     }
   };
   const handleLogout = async () => {
@@ -130,19 +187,12 @@ const Index = () => {
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-background">
-      <Navbar user={user} onLogout={handleLogout} onSearch={handleSearch} className="bg-slate-400 rounded-sm" />
+  return (
+    <div className="min-h-screen bg-background">
+      <WelcomeDialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog} />
+      <Navbar user={user} onLogout={handleLogout} onSearch={handleSearch} />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Important Notice */}
-        <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-lg">
-          <p className="text-sm text-foreground">
-            ⚠️ <strong>Important:</strong> This site is designed to help students make informed decisions. 
-            Please refrain from posting false reviews or engaging in any inappropriate activities. 
-            We appreciate all contributors who help by adding faculty information and providing honest reviews. 
-            Thank you for building a trustworthy community! 🙏
-          </p>
-        </div>
         {/* Welcome Section */}
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-bold mb-4">
@@ -152,7 +202,7 @@ const Index = () => {
             Discover faculty reviews and share your experiences
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Button onClick={() => navigate("/add-faculty")} className="gradient-primary text-white bg-neutral-950 font-extralight rounded-full text-justify text-base">
+            <Button onClick={() => navigate("/add-faculty")}>
               <Plus className="h-4 w-4 mr-2" />
               Add Faculty
             </Button>
@@ -162,24 +212,71 @@ const Index = () => {
             <Button variant="outline" onClick={() => navigate("/search")}>
               Search Faculty
             </Button>
+            <Button variant="outline" onClick={() => navigate("/blacklisted")}>
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Blacklisted Faculty
+            </Button>
           </div>
         </div>
+
+        {/* Top Contributors */}
+        <div className="mb-12">
+          <TopUsers />
+        </div>
+
+        {/* Blacklisted Faculty Alert */}
+        {blacklistedFaculty.length > 0 && (
+          <div className="mb-12">
+            <Card className="border-destructive/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-5 w-5" />
+                  Blacklisted Faculty Alert
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  These faculty members have received low ratings (below 2 stars)
+                </p>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {blacklistedFaculty.map((f) => (
+                    <FacultyCard key={f.id} faculty={f} />
+                  ))}
+                </div>
+                <div className="mt-4">
+                  <Button variant="outline" onClick={() => navigate("/blacklisted")}>
+                    View All Blacklisted Faculty
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Recently Added Faculty */}
         <div>
           <h2 className="text-2xl font-bold mb-6">Recently Added Faculty</h2>
-          {loading ? <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => <div key={i} className="h-40 bg-muted animate-pulse rounded-lg" />)}
-            </div> : faculty.length > 0 ? <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50">
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-40 bg-muted animate-pulse rounded-lg" />
+              ))}
+            </div>
+          ) : faculty.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {faculty.map(f => <FacultyCard key={f.id} faculty={f} />)}
-            </div> : <div className="text-center py-12 bg-muted/30 rounded-lg">
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-muted/30 rounded-lg">
               <p className="text-muted-foreground mb-4">No faculty added yet</p>
               <Button onClick={() => navigate("/add-faculty")}>
                 Add First Faculty
               </Button>
-            </div>}
+            </div>
+          )}
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
 export default Index;

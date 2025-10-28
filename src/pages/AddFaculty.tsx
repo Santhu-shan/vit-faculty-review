@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { ArrowLeft } from "lucide-react";
 import { Session, User } from "@supabase/supabase-js";
+import { showRewardToast } from "@/components/RewardToast";
 const AddFaculty = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
@@ -121,6 +122,7 @@ const AddFaculty = () => {
       }).select();
       
       if (error) throw error;
+      showRewardToast(20, 'faculty');
       toast.success("Faculty added successfully!");
       navigate("/");
     } catch (error: any) {

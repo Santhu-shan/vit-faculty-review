@@ -124,7 +124,7 @@ const Auth = () => {
                   <Label htmlFor="signin-email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="signin-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
+                    <Input id="signin-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -144,13 +144,13 @@ const Auth = () => {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Display Name</Label>
-                  <Input id="signup-name" type="text" placeholder="John Doe" value={displayName} onChange={e => setDisplayName(e.target.value)} required />
+                  <Input id="signup-name" type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="signup-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
+                    <Input id="signup-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
                   </div>
                 </div>
                 <div className="space-y-2">

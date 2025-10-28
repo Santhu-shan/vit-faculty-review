@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      blacklist_votes: {
+        Row: {
+          created_at: string
+          faculty_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          faculty_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          faculty_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blacklist_votes_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculty"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_votes: {
         Row: {
           comment_id: string
@@ -116,8 +145,10 @@ export type Database = {
           created_by: string
           department: string
           details_image_url: string | null
+          dislikes: number | null
           faculty_id: string | null
           id: string
+          likes: number | null
           mobile_number: string | null
           name: string
           office_hours: string | null
@@ -132,8 +163,10 @@ export type Database = {
           created_by: string
           department: string
           details_image_url?: string | null
+          dislikes?: number | null
           faculty_id?: string | null
           id?: string
+          likes?: number | null
           mobile_number?: string | null
           name: string
           office_hours?: string | null
@@ -148,8 +181,10 @@ export type Database = {
           created_by?: string
           department?: string
           details_image_url?: string | null
+          dislikes?: number | null
           faculty_id?: string | null
           id?: string
+          likes?: number | null
           mobile_number?: string | null
           name?: string
           office_hours?: string | null
@@ -157,6 +192,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      faculty_votes: {
+        Row: {
+          created_at: string
+          faculty_id: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          faculty_id: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          faculty_id?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faculty_votes_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculty"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -197,6 +264,38 @@ export type Database = {
         }
         Relationships: []
       }
+      review_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           approachability: number | null
@@ -204,10 +303,12 @@ export type Database = {
           clarity: number | null
           content: string
           created_at: string
+          dislikes: number | null
           faculty_id: string
           fairness: number | null
           id: string
           is_anonymous: boolean | null
+          likes: number | null
           rejection_reason: string | null
           status: string | null
           teaching_quality: number | null
@@ -220,10 +321,12 @@ export type Database = {
           clarity?: number | null
           content: string
           created_at?: string
+          dislikes?: number | null
           faculty_id: string
           fairness?: number | null
           id?: string
           is_anonymous?: boolean | null
+          likes?: number | null
           rejection_reason?: string | null
           status?: string | null
           teaching_quality?: number | null
@@ -236,10 +339,12 @@ export type Database = {
           clarity?: number | null
           content?: string
           created_at?: string
+          dislikes?: number | null
           faculty_id?: string
           fairness?: number | null
           id?: string
           is_anonymous?: boolean | null
+          likes?: number | null
           rejection_reason?: string | null
           status?: string | null
           teaching_quality?: number | null

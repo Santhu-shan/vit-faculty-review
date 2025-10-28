@@ -12,6 +12,7 @@ import Browse from "./pages/Browse";
 import Admin from "./pages/Admin";
 import SearchFaculty from "./pages/SearchFaculty";
 import EditFaculty from "./pages/EditFaculty";
+import BlacklistedFaculty from "./pages/BlacklistedFaculty";
 import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
@@ -29,6 +30,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/browse" element={<Browse />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/search" element={<SearchFaculty />} />
+          <Route path="/blacklisted" element={<BlacklistedFaculty />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

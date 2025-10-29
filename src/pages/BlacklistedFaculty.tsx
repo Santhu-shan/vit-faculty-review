@@ -53,7 +53,7 @@ const BlacklistedFaculty = () => {
 
   const fetchBlacklistedFaculty = async () => {
     try {
-      // Fetch all faculty
+      // Fetch all approved faculty
       const { data: facultyData, error: facultyError } = await supabase
         .from("faculty")
         .select("*")
@@ -61,40 +61,63 @@ const BlacklistedFaculty = () => {
 
       if (facultyError) throw facultyError;
 
-      // Fetch reviews and blacklist votes for all faculty
-      const facultyWithStats = await Promise.all(
-        (facultyData || []).map(async (f) => {
-          // Get average rating
-          const { data: reviews } = await supabase
-            .from("reviews")
-            .select("teaching_quality, approachability, clarity, availability, fairness")
-            .eq("faculty_id", f.id)
-            .eq("status", "approved");
+      if (!facultyData || facultyData.length === 0) {
+        setFaculty([]);
+        setLoading(false);
+        return;
+      }
 
-          let averageRating = 0;
-          if (reviews && reviews.length > 0) {
-            const sum = reviews.reduce((acc, review) => {
-              return acc + (review.teaching_quality + review.approachability + review.clarity + review.availability + review.fairness) / 5;
-            }, 0);
-            averageRating = sum / reviews.length;
-          }
+      // Fetch all reviews at once
+      const { data: allReviews, error: reviewsError } = await supabase
+        .from("reviews")
+        .select("teaching_quality, approachability, clarity, availability, fairness, faculty_id")
+        .eq("status", "approved");
 
-          // Get blacklist count
-          const { count: blacklistCount } = await supabase
-            .from("blacklist_votes")
-            .select("*", { count: "exact", head: true })
-            .eq("faculty_id", f.id);
+      if (reviewsError) throw reviewsError;
 
-          return {
-            ...f,
-            averageRating,
-            reviewCount: reviews?.length || 0,
-            blacklistCount: blacklistCount || 0,
-          };
-        })
-      );
+      // Fetch all blacklist votes at once
+      const { data: allBlacklistVotes, error: blacklistError } = await supabase
+        .from("blacklist_votes")
+        .select("faculty_id");
 
-      // Filter faculty with less than 2 stars
+      if (blacklistError) throw blacklistError;
+
+      // Group reviews by faculty_id
+      const reviewsByFaculty = (allReviews || []).reduce((acc, review) => {
+        if (!acc[review.faculty_id]) {
+          acc[review.faculty_id] = [];
+        }
+        acc[review.faculty_id].push(review);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      // Count blacklist votes by faculty_id
+      const blacklistCountByFaculty = (allBlacklistVotes || []).reduce((acc, vote) => {
+        acc[vote.faculty_id] = (acc[vote.faculty_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Calculate stats for each faculty
+      const facultyWithStats = facultyData.map((f) => {
+        const reviews = reviewsByFaculty[f.id] || [];
+        let averageRating = 0;
+        
+        if (reviews.length > 0) {
+          const sum = reviews.reduce((acc, review) => {
+            return acc + (review.teaching_quality + review.approachability + review.clarity + review.availability + review.fairness) / 5;
+          }, 0);
+          averageRating = sum / reviews.length;
+        }
+
+        return {
+          ...f,
+          averageRating,
+          reviewCount: reviews.length,
+          blacklistCount: blacklistCountByFaculty[f.id] || 0,
+        };
+      });
+
+      // Filter faculty with less than 2 stars and at least one review
       const blacklisted = facultyWithStats.filter(
         (f) => f.averageRating < 2 && f.reviewCount > 0
       );

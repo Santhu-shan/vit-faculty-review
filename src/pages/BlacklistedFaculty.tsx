@@ -44,12 +44,8 @@ const BlacklistedFaculty = () => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchBlacklistedFaculty();
-    } else {
-      navigate("/auth");
-    }
-  }, [user, navigate]);
+    fetchBlacklistedFaculty();
+  }, []);
 
   const fetchBlacklistedFaculty = async () => {
     try {

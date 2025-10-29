@@ -43,12 +43,8 @@ const Index = () => {
       fetchFaculty();
       fetchBlacklistedFaculty();
       
-      // Show welcome dialog on first visit
-      const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
-      if (!hasSeenWelcome) {
-        setShowWelcomeDialog(true);
-        localStorage.setItem('hasSeenWelcome', 'true');
-      }
+      // Show welcome dialog every time user visits home page
+      setShowWelcomeDialog(true);
     } else {
       setLoading(false);
     }

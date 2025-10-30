@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import FacultyCard from "@/components/FacultyCard";
 import TopUsers from "@/components/TopUsers";
 import WelcomeDialog from "@/components/WelcomeDialog";
+import { AskQuestion } from "@/components/AskQuestion";
 import { Plus, TrendingUp, Users, Award, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-bg.jpg";
@@ -250,6 +251,11 @@ const Index = () => {
             </Card>
           </div>
         )}
+
+        {/* Ask Questions Section */}
+        <div className="mb-12">
+          <AskQuestion />
+        </div>
 
         {/* Recently Added Faculty */}
         <div>

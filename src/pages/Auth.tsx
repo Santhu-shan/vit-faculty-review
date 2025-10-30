@@ -45,6 +45,12 @@ const Auth = () => {
       toast.error("Please fill in all fields");
       return;
     }
+
+    if (!email.endsWith("@vitstudent.ac.in")) {
+      toast.error("Please use your VIT student email (@vitstudent.ac.in)");
+      return;
+    }
+
     setLoading(true);
     try {
       const {
@@ -150,7 +156,7 @@ const Auth = () => {
                   <Label htmlFor="signup-email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="signup-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
+                    <Input id="signup-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" placeholder="yourname@vitstudent.ac.in" required />
                   </div>
                 </div>
                 <div className="space-y-2">

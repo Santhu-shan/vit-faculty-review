@@ -8,6 +8,7 @@ import FacultyCard from "@/components/FacultyCard";
 import TopUsers from "@/components/TopUsers";
 import WelcomeDialog from "@/components/WelcomeDialog";
 import { AskQuestion } from "@/components/AskQuestion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, TrendingUp, Users, Award, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import heroImage from "@/assets/hero-bg.jpg";
@@ -218,9 +219,20 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Top Contributors */}
+        {/* Main Content - Tabs Section */}
         <div className="mb-12">
-          <TopUsers />
+          <Tabs defaultValue="contributors" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="contributors">Top Contributors</TabsTrigger>
+              <TabsTrigger value="questions">Ask & Answer</TabsTrigger>
+            </TabsList>
+            <TabsContent value="contributors">
+              <TopUsers />
+            </TabsContent>
+            <TabsContent value="questions">
+              <AskQuestion />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Blacklisted Faculty Alert */}
@@ -251,11 +263,6 @@ const Index = () => {
             </Card>
           </div>
         )}
-
-        {/* Ask Questions Section */}
-        <div className="mb-12">
-          <AskQuestion />
-        </div>
 
         {/* Recently Added Faculty */}
         <div>

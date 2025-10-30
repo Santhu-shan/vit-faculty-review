@@ -77,33 +77,31 @@ const TopUsers = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {topUsers.map((user, index) => (
             <div
               key={user.id}
-              className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+              className="flex flex-col items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
             >
-              <div className="flex items-center gap-3 flex-1">
-                <div className="flex items-center gap-2 w-8">
-                  {getRankIcon(index) || (
-                    <span className="text-sm font-bold text-muted-foreground">
-                      {index + 1}
-                    </span>
-                  )}
-                </div>
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={user.avatar_url || undefined} />
-                  <AvatarFallback className="bg-gradient-primary text-white">
-                    {getInitials(user.display_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{user.display_name}</p>
-                </div>
+              <div className="flex items-center gap-2">
+                {getRankIcon(index) || (
+                  <span className="text-sm font-bold text-muted-foreground">
+                    #{index + 1}
+                  </span>
+                )}
               </div>
-              <Badge variant="secondary" className="font-bold">
-                {user.points} pts
-              </Badge>
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={user.avatar_url || undefined} />
+                <AvatarFallback className="bg-gradient-primary text-white text-xl">
+                  {getInitials(user.display_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center">
+                <p className="font-semibold">{user.display_name}</p>
+                <Badge variant="secondary" className="font-bold mt-2">
+                  {user.points} pts
+                </Badge>
+              </div>
             </div>
           ))}
         </div>

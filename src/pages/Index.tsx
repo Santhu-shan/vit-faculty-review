@@ -27,6 +27,11 @@ const Index = () => {
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Show welcome dialog only when user signs in
+      if (event === 'SIGNED_IN') {
+        setShowWelcomeDialog(true);
+      }
     });
     supabase.auth.getSession().then(({
       data: {
@@ -42,9 +47,6 @@ const Index = () => {
     if (user) {
       fetchFaculty();
       fetchBlacklistedFaculty();
-      
-      // Show welcome dialog every time user visits home page
-      setShowWelcomeDialog(true);
     } else {
       setLoading(false);
     }

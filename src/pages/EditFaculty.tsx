@@ -160,7 +160,12 @@ const EditFaculty = () => {
       toast.success("Faculty updated successfully!");
       navigate(`/faculty/${id}`);
     } catch (error: any) {
-      toast.error(error.message || "Failed to update faculty");
+      // Check for unique constraint violation on email
+      if (error.code === '23505' && error.message?.includes('faculty_contact_email_unique')) {
+        toast.error("Faculty already exists with this email address");
+      } else {
+        toast.error(error.message || "Failed to update faculty");
+      }
       console.error(error);
     } finally {
       setSubmitting(false);

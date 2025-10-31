@@ -126,7 +126,12 @@ const AddFaculty = () => {
       toast.success("Faculty added successfully!");
       navigate("/");
     } catch (error: any) {
-      toast.error(error.message || "Failed to add faculty");
+      // Check for unique constraint violation on email
+      if (error.code === '23505' && error.message?.includes('faculty_contact_email_unique')) {
+        toast.error("Faculty already exists with this email address");
+      } else {
+        toast.error(error.message || "Failed to add faculty");
+      }
       console.error(error);
     } finally {
       setLoading(false);

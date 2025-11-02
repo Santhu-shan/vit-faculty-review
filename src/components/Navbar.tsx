@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, User, LogOut, Star } from "lucide-react";
+import { Search, User, LogOut, Star, Award } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 interface NavbarProps {
@@ -43,6 +43,12 @@ const Navbar = ({
 
           <div className="flex items-center space-x-2">
             {user ? <>
+                <Link to="/top-faculty">
+                  <Button variant="ghost" size="sm" className="hidden sm:flex">
+                    <Award className="h-4 w-4 mr-2" />
+                    Top Faculty
+                  </Button>
+                </Link>
                 <Link to="/profile">
                   <Button variant="ghost" size="sm" className="hidden sm:flex">
                     <User className="h-4 w-4 mr-2" />

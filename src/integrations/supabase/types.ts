@@ -228,6 +228,35 @@ export type Database = {
         }
         Relationships: []
       }
+      faculty_stars: {
+        Row: {
+          created_at: string
+          faculty_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          faculty_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          faculty_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faculty_stars_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculty"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       faculty_votes: {
         Row: {
           created_at: string

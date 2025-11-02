@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { MessageSquare, ArrowLeft, Send, ThumbsUp, ThumbsDown, AlertTriangle } from "lucide-react";
+import { MessageSquare, ArrowLeft, Send, ThumbsUp, ThumbsDown, AlertTriangle, Star, Edit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { showRewardToast } from "@/components/RewardToast";
@@ -34,6 +34,9 @@ const FacultyProfile = () => {
   const [facultyVotes, setFacultyVotes] = useState({ likes: 0, dislikes: 0, userVote: null as string | null });
   const [reviewVotes, setReviewVotes] = useState<{ [key: string]: { likes: number, dislikes: number, userVote: string | null } }>({});
   const [blacklistVotes, setBlacklistVotes] = useState({ count: 0, userVoted: false });
+  const [starState, setStarState] = useState({ count: 0, userStarred: false });
+  const [editingCourses, setEditingCourses] = useState(false);
+  const [coursesText, setCoursesText] = useState("");
 
   // Review form state
   const [reviewContent, setReviewContent] = useState("");
@@ -72,6 +75,7 @@ const FacultyProfile = () => {
       fetchReviews();
       fetchFacultyVotes();
       fetchBlacklistVotes();
+      fetchStarData();
     }
   }, [user, id]);
 
@@ -120,6 +124,29 @@ const FacultyProfile = () => {
       });
     } catch (error) {
       console.error("Error fetching blacklist votes:", error);
+    }
+  };
+
+  const fetchStarData = async () => {
+    try {
+      const { count } = await supabase
+        .from("faculty_stars")
+        .select("*", { count: 'exact', head: true })
+        .eq("faculty_id", id);
+
+      const { data: userStar } = await supabase
+        .from("faculty_stars")
+        .select("id")
+        .eq("faculty_id", id)
+        .eq("user_id", user?.id)
+        .maybeSingle();
+
+      setStarState({
+        count: count || 0,
+        userStarred: !!userStar
+      });
+    } catch (error) {
+      console.error("Error fetching star data:", error);
     }
   };
 
@@ -185,6 +212,57 @@ const FacultyProfile = () => {
       await fetchBlacklistVotes();
     } catch (error: any) {
       toast.error("Failed to update blacklist vote");
+      console.error(error);
+    }
+  };
+
+  const handleStarToggle = async () => {
+    if (!user) return;
+
+    try {
+      if (starState.userStarred) {
+        // Remove star
+        await supabase
+          .from("faculty_stars")
+          .delete()
+          .eq("faculty_id", id)
+          .eq("user_id", user.id);
+        toast.success("Removed from top faculty");
+      } else {
+        // Add star
+        await supabase
+          .from("faculty_stars")
+          .insert({
+            faculty_id: id,
+            user_id: user.id
+          });
+        toast.success("Added to top faculty!");
+      }
+
+      await fetchStarData();
+    } catch (error: any) {
+      toast.error("Failed to update top faculty status");
+      console.error(error);
+    }
+  };
+
+  const handleUpdateCourses = async () => {
+    if (!user) return;
+
+    try {
+      const courses = coursesText.split(",").map(c => c.trim()).filter(c => c);
+      const { error } = await supabase
+        .from("faculty")
+        .update({ courses_taught: courses.length > 0 ? courses : null })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      await fetchFaculty();
+      setEditingCourses(false);
+      toast.success("Courses updated successfully!");
+    } catch (error: any) {
+      toast.error("Failed to update courses");
       console.error(error);
     }
   };
@@ -495,6 +573,15 @@ const FacultyProfile = () => {
                     <AlertTriangle className="h-4 w-4 mr-1" />
                     Blacklist ({blacklistVotes.count})
                   </Button>
+                  <Button
+                    variant={starState.userStarred ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleStarToggle()}
+                    className={starState.userStarred ? 'gradient-primary text-white animate-pulse-glow' : ''}
+                  >
+                    <Star className={`h-4 w-4 mr-1 ${starState.userStarred ? 'fill-current' : ''}`} />
+                    Top Faculty ({starState.count})
+                  </Button>
                 </div>
               </div>
             </div>
@@ -524,10 +611,72 @@ const FacultyProfile = () => {
               </div>
             )}
 
+            {/* Courses Taught Section - Editable by any user */}
+            <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold">Courses Taught</h3>
+                {!editingCourses && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setEditingCourses(true)}
+                    className="hover-lift"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+              
+              {editingCourses ? (
+                <div className="space-y-3">
+                  <Textarea
+                    value={coursesText}
+                    onChange={(e) => setCoursesText(e.target.value)}
+                    placeholder="Enter courses, comma-separated (e.g., Data Structures, Algorithms)"
+                    rows={3}
+                    className="border-primary/30"
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      onClick={handleUpdateCourses}
+                      className="gradient-primary text-white"
+                    >
+                      Save
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => {
+                        setEditingCourses(false);
+                        setCoursesText(faculty.courses_taught ? faculty.courses_taught.join(", ") : "");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {faculty.courses_taught && faculty.courses_taught.length > 0 ? (
+                    faculty.courses_taught.map((course: string, index: number) => (
+                      <Badge key={index} variant="secondary" className="text-sm">
+                        {course}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No courses listed yet. Click Edit to add courses.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {(user?.id === faculty.created_by) && (
               <div className="mt-4">
-                <Button onClick={() => navigate(`/edit-faculty/${id}`)} variant="outline">
-                  Edit Faculty
+                <Button onClick={() => navigate(`/edit-faculty/${id}`)} variant="outline" className="hover-lift">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Faculty Profile
                 </Button>
               </div>
             )}

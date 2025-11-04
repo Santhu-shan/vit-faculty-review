@@ -81,9 +81,9 @@ const Browse = () => {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (f) =>
-          f.name.toLowerCase().includes(query) ||
-          f.faculty_id.toLowerCase().includes(query) ||
-          f.department.toLowerCase().includes(query)
+          (f.name || '').toLowerCase().includes(query) ||
+          (f.faculty_id || '').toLowerCase().includes(query) ||
+          (f.department || '').toLowerCase().includes(query)
       );
     }
 

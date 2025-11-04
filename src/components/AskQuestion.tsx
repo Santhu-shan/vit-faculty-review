@@ -138,9 +138,9 @@ export const AskQuestion = () => {
 
   return (
     <div className="space-y-8">
-      <Card className="p-6">
+      <Card className="p-6 shadow-elegant">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <MessageSquare className="h-6 w-6" />
+          <MessageSquare className="h-6 w-6 text-primary" />
           Ask a Question
         </h2>
         <form onSubmit={handleSubmitQuestion} className="space-y-4">
@@ -149,6 +149,7 @@ export const AskQuestion = () => {
             value={newQuestion.title}
             onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
             disabled={!session}
+            className="text-base"
           />
           <Textarea
             placeholder="Describe your question about faculty..."
@@ -157,7 +158,7 @@ export const AskQuestion = () => {
             disabled={!session}
             rows={4}
           />
-          <Button type="submit" disabled={loading || !session}>
+          <Button type="submit" disabled={loading || !session} className="w-full">
             <Send className="h-4 w-4 mr-2" />
             Post Question
           </Button>
@@ -172,15 +173,16 @@ export const AskQuestion = () => {
       <div className="space-y-4">
         <h3 className="text-xl font-semibold">Recent Questions</h3>
         {questions.length === 0 ? (
-          <Card className="p-6 text-center text-muted-foreground">
-            No questions yet. Be the first to ask!
+          <Card className="p-8 text-center text-muted-foreground shadow-soft">
+            <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No questions yet. Be the first to ask!</p>
           </Card>
         ) : (
           questions.map((question) => (
-            <Card key={question.id} className="p-6">
+            <Card key={question.id} className="p-6 shadow-soft hover:shadow-medium transition-all">
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold">{question.title}</h4>
+                  <h4 className="text-lg font-semibold mb-1">{question.title}</h4>
                   <p className="text-sm text-muted-foreground">
                     Asked by {question.profiles?.display_name || "Anonymous"} •{" "}
                     {new Date(question.created_at).toLocaleDateString()}
@@ -189,12 +191,12 @@ export const AskQuestion = () => {
                 <p className="text-foreground">{question.content}</p>
 
                 <div className="border-t pt-4 space-y-4">
-                  <h5 className="font-semibold text-sm">
+                  <h5 className="font-semibold text-sm text-muted-foreground">
                     {question.answers?.length || 0} Answer(s)
                   </h5>
                   
                   {question.answers?.map((answer) => (
-                    <div key={answer.id} className="bg-muted/50 p-4 rounded-lg">
+                    <div key={answer.id} className="bg-muted/30 p-4 rounded-lg border border-border/50">
                       <p className="text-sm text-muted-foreground mb-2">
                         {answer.profiles?.display_name || "Anonymous"} •{" "}
                         {new Date(answer.created_at).toLocaleDateString()}
@@ -212,10 +214,12 @@ export const AskQuestion = () => {
                       }
                       disabled={!session}
                       rows={3}
+                      className="flex-1"
                     />
                     <Button
                       onClick={() => handleSubmitAnswer(question.id)}
                       disabled={!session || !answerContent[question.id]}
+                      size="icon"
                     >
                       <Send className="h-4 w-4" />
                     </Button>

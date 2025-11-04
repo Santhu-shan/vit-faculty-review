@@ -8,6 +8,7 @@ import FacultyCard from "@/components/FacultyCard";
 import TopUsers from "@/components/TopUsers";
 import WelcomeDialog from "@/components/WelcomeDialog";
 import { AskQuestion } from "@/components/AskQuestion";
+import { RandomFacultyReview } from "@/components/RandomFacultyReview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, TrendingUp, Users, Award, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -216,23 +217,35 @@ const Index = () => {
               <AlertTriangle className="h-4 w-4 mr-2" />
               Blacklisted Faculty
             </Button>
+            <Button variant="outline" onClick={() => navigate("/top-faculty")}>
+              <Award className="h-4 w-4 mr-2" />
+              Top Faculty
+            </Button>
           </div>
         </div>
 
-        {/* Main Content - Tabs Section */}
-        <div className="mb-12">
-          <Tabs defaultValue="contributors" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="contributors">Top Contributors</TabsTrigger>
-              <TabsTrigger value="questions">Ask & Answer</TabsTrigger>
-            </TabsList>
-            <TabsContent value="contributors">
-              <TopUsers />
-            </TabsContent>
-            <TabsContent value="questions">
-              <AskQuestion />
-            </TabsContent>
-          </Tabs>
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-8 mb-12">
+          {/* Left Side - Random Faculty Review */}
+          <div className="lg:col-span-1">
+            <RandomFacultyReview />
+          </div>
+
+          {/* Right Side - Tabs for Top Contributors and Q&A */}
+          <div className="lg:col-span-2">
+            <Tabs defaultValue="contributors" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="contributors">Top Contributors</TabsTrigger>
+                <TabsTrigger value="questions">Ask & Answer</TabsTrigger>
+              </TabsList>
+              <TabsContent value="contributors">
+                <TopUsers />
+              </TabsContent>
+              <TabsContent value="questions">
+                <AskQuestion />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
 
         {/* Blacklisted Faculty Alert */}
@@ -254,9 +267,13 @@ const Index = () => {
                     <FacultyCard key={f.id} faculty={f} />
                   ))}
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 flex gap-4">
                   <Button variant="outline" onClick={() => navigate("/blacklisted")}>
                     View All Blacklisted Faculty
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/top-faculty")}>
+                    <Award className="h-4 w-4 mr-2" />
+                    Top Faculty
                   </Button>
                 </div>
               </CardContent>
